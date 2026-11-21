@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>로또 번호 뽑기</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px 12px;
+      background: linear-gradient(145deg, #fff7d8, #e2f8ff 55%, #f7e9ff);
+      color: #25234d;
+      font-family: system-ui, "Malgun Gothic", sans-serif;
+      text-align: center;
+    }
+
+    main {
+      width: 100%;
+      max-width: 780px;
+      padding: clamp(18px, 5vw, 42px);
+      border: 3px solid #fff;
+      border-radius: 32px;
+      background: #fffdf8;
+      box-shadow: 0 10px 0 #7562a21c;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 7vw, 3.25rem);
+      line-height: 1.2;
+    }
+
+    .star {
+      color: #a15c00;
+      font-size: 0.65em;
+      vertical-align: middle;
+    }
+
+    #status {
+      min-height: 3em;
+      margin: 0;
+      font-size: 1.2rem;
+      line-height: 1.5;
+    }
+
+    .balls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(8px, 2vw, 16px);
+      margin: 8px auto 28px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .ball {
+      position: relative;
+      display: grid;
+      place-items: center;
+      justify-self: center;
+      width: 100%;
+      max-width: 106px;
+      aspect-ratio: 1;
+      padding-bottom: 12%;
+      border: 2px solid var(--edge);
+      border-radius: 50%;
+      background: var(--fill);
+      box-shadow: inset 0 -6px 0 #25234d12;
+      font-size: clamp(1.75rem, 7vw, 2.7rem);
+      font-weight: 850;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    .ball:nth-child(1) { --fill: #ffe67b; --edge: #e4aa27; }
+    .ball:nth-child(2) { --fill: #ffd0b5; --edge: #df875e; }
+    .ball:nth-child(3) { --fill: #ffcae1; --edge: #dd7ca7; }
+    .ball:nth-child(4) { --fill: #b8f2d1; --edge: #67be91; }
+    .ball:nth-child(5) { --fill: #bceaff; --edge: #70b6de; }
+    .ball:nth-child(6) { --fill: #e2d2ff; --edge: #aa89dc; }
+
+    .face {
+      position: absolute;
+      left: 50%;
+      bottom: 17%;
+      width: 22px;
+      height: 11px;
+      transform: translateX(-50%);
+    }
+
+    .face::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 18px 0 currentColor;
+    }
+
+    .face::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 6px;
+      width: 10px;
+      height: 6px;
+      border-bottom: 2px solid currentColor;
+      border-radius: 50%;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    button {
+      flex: 1 1 220px;
+      min-height: 72px;
+      padding: 12px 18px;
+      border: 2px solid;
+      border-radius: 20px;
+      color: #25234d;
+      font: inherit;
+      font-size: 1.55rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    #draw {
+      border-color: #b37b0d;
+      background: #ffdf65;
+    }
+
+    #redraw {
+      border-color: #9676c6;
+      background: #e5d5ff;
+    }
+
+    .controls button[aria-disabled="true"] {
+      border-color: #b0a9bb !important;
+      background: #eeebf1 !important;
+      color: #595268;
+      cursor: default;
+    }
+
+    button:focus-visible {
+      outline: 3px solid #25234d;
+      outline-offset: 4px;
+    }
+
+    .screen-reader-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    @media (min-width: 650px) {
+      .balls {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1><span class="star" aria-hidden="true">★</span> 로또 번호 뽑기</h1>
+    <p id="status" role="status">‘번호 뽑기’ 버튼을 눌러 주세요.</p>
+
+    <ul class="balls" aria-hidden="true">
+      <li class="ball"><span class="number">–</span><span class="face"></span></li>
+      <li class="ball"><span class="number">–</span><span class="face"></span></li>
+      <li class="ball"><span class="number">–</span><span class="face"></span></li>
+      <li class="ball"><span class="number">–</span><span class="face"></span></li>
+      <li class="ball"><span class="number">–</span><span class="face"></span></li>
+      <li class="ball"><span class="number">–</span><span class="face"></span></li>
+    </ul>
+    <p id="result" class="screen-reader-only" role="status"></p>
+
+    <div class="controls">
+      <button id="draw" type="button">번호 뽑기</button>
+      <button id="redraw" type="button" aria-disabled="true">다시 뽑기</button>
+    </div>
+  </main>
+
+  <script>
+    const numberLabels = document.querySelectorAll(".number");
+    const statusMessage = document.querySelector("#status");
+    const resultMessage = document.querySelector("#result");
+    const drawButton = document.querySelector("#draw");
+    const redrawButton = document.querySelector("#redraw");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    function pickNumbers() {
+      const numbers = new Set();
+
+      while (numbers.size < numberLabels.length) {
+        numbers.add(Math.floor(Math.random() * 45) + 1);
+      }
+
+      return [...numbers];
+    }
+
+    function showNumbers(numbers) {
+      numberLabels.forEach((label, index) => {
+        label.textContent = numbers[index];
+      });
+    }
+
+    function finishDraw() {
+      const numbers = pickNumbers().sort((a, b) => a - b);
+      showNumbers(numbers);
+      statusMessage.textContent = "번호 6개를 뽑았어요!";
+      resultMessage.textContent = `뽑힌 번호는 ${numbers.join(", ")}입니다.`;
+      drawButton.removeAttribute("aria-disabled");
+      redrawButton.removeAttribute("aria-disabled");
+    }
+
+    function drawNumbers(event) {
+      if (event.currentTarget.getAttribute("aria-disabled") === "true") {
+        return;
+      }
+
+      drawButton.setAttribute("aria-disabled", "true");
+      redrawButton.setAttribute("aria-disabled", "true");
+      statusMessage.textContent = "번호를 뽑는 중이에요…";
+      resultMessage.textContent = "";
+
+      if (reduceMotion.matches) {
+        finishDraw();
+        return;
+      }
+
+      showNumbers(pickNumbers());
+      const animation = setInterval(() => showNumbers(pickNumbers()), 80);
+
+      setTimeout(() => {
+        clearInterval(animation);
+        finishDraw();
+      }, 720);
+    }
+
+    drawButton.addEventListener("click", drawNumbers);
+    redrawButton.addEventListener("click", drawNumbers);
+  </script>
+</body>
+</html>
